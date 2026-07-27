@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
     debug: bool = False
     log_level: str = "INFO"
+    database_url : str
 
 
 @lru_cache
