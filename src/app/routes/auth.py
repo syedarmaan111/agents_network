@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.models import RevokedToken
 from app.schemas import (
     TokenResponse,
     UserLogin,
@@ -9,13 +12,15 @@ from app.schemas import (
     UserResponse,
 )
 from app.services.auth import authenticate_user, register_user
-from app.utils.security import create_access_token
+from app.utils.security import create_access_token, login_required
 
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 @router.post(
@@ -30,10 +35,10 @@ def register(
     try:
         return register_user(database, user_data)
     except ValueError as error:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(error),
-        ) from error
+            content={"error": True, "message": "User already exists"},
+        )
 
 
 @router.post(
@@ -51,10 +56,9 @@ def login(
     )
 
     if user is None:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            content={"error": True, "message": "Invalid email or password"},
         )
 
     access_token = create_access_token(
@@ -65,8 +69,18 @@ def login(
         access_token=access_token,
     )
 
-@router.post("/logout")
-def logout():
+@router.post("/logout", dependencies=[Depends(bearer_scheme)])
+@login_required
+def logout(
+    request: Request,
+    database: Session = Depends(get_db),
+):
+    token = request.headers["Authorization"].removeprefix("Bearer ")
+
+    database.add(RevokedToken(token=token))
+    database.commit()
+
     return {
-        "message": "Logout successful."
+        "error": False,
+        "message": "Logout successful",
     }

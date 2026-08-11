@@ -1,3 +1,3 @@
-from app.models.user import User
+from app.models.user import RevokedToken, User
 
-__all__ = ["User"]
+__all__ = ["RevokedToken", "User"]
