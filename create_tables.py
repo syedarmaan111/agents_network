@@ -6,13 +6,12 @@ SRC_DIR = ROOT_DIR / "src"
 
 sys.path.insert(0, str(SRC_DIR))
 
-from app.database.base import Base
-from app.database.session import engine
-from app.models import User
+import app.models  # Register all SQLAlchemy models before creating tables.
+from app.database.session import create_tables as initialize_tables
 
 
 def create_tables() -> None:
-    Base.metadata.create_all(bind=engine)
+    initialize_tables()
     print("Database tables created successfully.")
 
 

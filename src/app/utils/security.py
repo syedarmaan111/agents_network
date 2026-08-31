@@ -72,12 +72,20 @@ def login_required(function):
         settings = get_settings()
 
         try:
-            jwt.decode(
+            payload = jwt.decode(
                 token,
                 settings.jwt_secret_key,
                 algorithms=[settings.jwt_algorithm],
             )
         except jwt.PyJWTError:
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"error": True, "message": "Invalid or expired token"},
+            )
+
+        try:
+            request.state.user_id = int(payload["sub"])
+        except (KeyError, TypeError, ValueError):
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"error": True, "message": "Invalid or expired token"},

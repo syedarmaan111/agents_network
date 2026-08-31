@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config.settings import get_settings
+from app.database.base import Base
 
 
 settings = get_settings()
@@ -18,6 +19,10 @@ SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
 )
+
+
+def create_tables() -> None:
+    Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Generator[Session, None, None]:

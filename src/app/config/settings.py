@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    groq_api_key: str = ""
+    groq_model: str = "openai/gpt-oss-20b"
 
 
 @lru_cache
