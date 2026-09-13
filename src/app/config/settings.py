@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-20b"
+    tavily_api_key: str = ""
 
 
 @lru_cache
