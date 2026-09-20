@@ -1,5 +1,6 @@
 import app.models  # Register all SQLAlchemy models before creating tables.
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -17,6 +18,13 @@ def create_app() -> FastAPI:
         title=settings.project_name,
         version=settings.version,
         debug=settings.debug,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
     app.include_router(health_router, prefix="/api")
