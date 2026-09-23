@@ -28,7 +28,7 @@ function Auth({ onLogin, initialMessage }: { onLogin: (token: string, email: str
 
 function Chat({ token, email, onLogout }: { token: string; email: string; onLogout: (expired?: boolean) => void }) {
   const [agent, setAgent] = useState<Agent>(agents[0]); const [messages, setMessages] = useState<Message[]>([]); const [conversationId, setConversationId] = useState<number | null>(null); const [input, setInput] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [drawer, setDrawer] = useState(false); const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [messages, busy]);
+  useEffect(() => { end.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, busy]);
   const clear = () => { setMessages([]); setConversationId(null); setError(""); setInput(""); };
   const chooseAgent = (next: Agent) => { if (next.id === agent.id) return; if (conversationId !== null && !window.confirm("Switching agents will discard this conversation. Continue?")) return; setAgent(next); clear(); setDrawer(false); };
   const send = async (message = input.trim()) => { if (!message || busy || message.length > 10000) return; setInput(""); setError(""); setMessages(current => [...current, { role: "user", content: message }]); setBusy(true); try { const result = await api.sendChatMessage(token, message, conversationId, agent.id); setConversationId(result.conversation_id); setMessages(current => [...current, { role: "assistant", content: result.response }]); } catch (e) { const apiError = e as ApiError; if (apiError.status === 401) { onLogout(true); return; } setError(apiError.message); } finally { setBusy(false); } };
