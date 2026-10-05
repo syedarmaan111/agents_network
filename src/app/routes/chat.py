@@ -7,14 +7,57 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models import Conversation, Message
-from app.schemas import ChatRequest, ChatResponse
+from app.schemas import (
+    ChatRequest,
+    ChatResponse,
+    ConversationDetail,
+    ConversationMessage,
+    ConversationSummary,
+)
 from app.services.agent import get_assistant_response
-from app.services.chat import get_conversation, get_conversation_messages
+from app.services.chat import get_conversation, get_conversation_messages, get_user_conversations
 from app.utils.security import login_required
 
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+
+def conversation_summary(database: Session, conversation: Conversation) -> ConversationSummary:
+    messages = get_conversation_messages(database, conversation.id)
+    first_user_message = next((message.content for message in messages if message.role == "user"), "New conversation")
+    updated_at = messages[-1].created_at if messages else conversation.created_at
+    return ConversationSummary(
+        id=conversation.id,
+        chatbot_type=conversation.chatbot_type,
+        title=first_user_message[:80],
+        updated_at=updated_at,
+    )
+
+
+@router.get("/conversations", response_model=list[ConversationSummary])
+@login_required
+def list_conversations(request: Request, database: Session = Depends(get_db)):
+    conversations = [
+        conversation_summary(database, conversation)
+        for conversation in get_user_conversations(database, request.state.user_id)
+    ]
+    return sorted(conversations, key=lambda conversation: conversation.updated_at, reverse=True)
+
+
+@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
+@login_required
+def get_conversation_detail(conversation_id: int, request: Request, database: Session = Depends(get_db)):
+    conversation = get_conversation(database, conversation_id)
+    if conversation is None:
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"error": True, "message": "Conversation not found"})
+    if conversation.user_id != request.state.user_id:
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"error": True, "message": "Conversation does not belong to user"})
+    summary = conversation_summary(database, conversation)
+    return ConversationDetail(
+        **summary.model_dump(),
+        messages=[ConversationMessage(role=message.role, content=message.content) for message in get_conversation_messages(database, conversation.id)],
+    )
 
 
 @router.post("", response_model=ChatResponse)

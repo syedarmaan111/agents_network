@@ -3,6 +3,8 @@ export type ChatbotType = "engineer" | "doctor" | "lawyer";
 export interface TokenResponse { access_token: string; token_type: string }
 export interface UserResponse { id: number; email: string; created_at: string }
 export interface ChatResponse { error: boolean; conversation_id: number; chatbot_type: ChatbotType; response: string }
+export interface ConversationSummary { id: number; chatbot_type: ChatbotType; title: string; updated_at: string }
+export interface ConversationDetail extends ConversationSummary { messages: { role: "user" | "assistant"; content: string }[] }
 export interface ApiError { status: number; message: string }
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
@@ -31,4 +33,6 @@ export const api = {
   login: (email: string, password: string) => request<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   logout: (token: string) => request<{ error: boolean; message: string }>("/auth/logout", { method: "POST" }, token),
   sendChatMessage: (token: string, message: string, conversation_id: number | null, chatbot_type: ChatbotType) => request<ChatResponse>("/chat", { method: "POST", body: JSON.stringify({ message, conversation_id, chatbot_type }) }, token),
+  getConversations: (token: string) => request<ConversationSummary[]>("/chat/conversations", {}, token),
+  getConversation: (token: string, conversationId: number) => request<ConversationDetail>(`/chat/conversations/${conversationId}`, {}, token),
 };

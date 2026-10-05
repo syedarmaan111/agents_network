@@ -24,3 +24,13 @@ def get_conversation_messages(
             .order_by(Message.created_at, Message.id)
         )
     )
+
+
+def get_user_conversations(database: Session, user_id: int) -> list[Conversation]:
+    return list(
+        database.scalars(
+            select(Conversation)
+            .where(Conversation.user_id == user_id)
+            .order_by(Conversation.created_at.desc(), Conversation.id.desc())
+        )
+    )
