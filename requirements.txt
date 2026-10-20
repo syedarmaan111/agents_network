@@ -3,10 +3,11 @@ uvicorn[standard]==0.51.0
 pydantic-settings==2.14.2
 SQLAlchemy==2.0.46
 PyJWT==2.11.0
-pwdlib==0.3.0
+pwdlib[argon2]==0.3.0
 email-validator==2.3.0
 psycopg[binary]==3.2.13
 langchain-core==1.2.13
 langchain-groq==1.1.2
 requests==2.32.5
 streamlit==1.54.0
+langchain-tavily

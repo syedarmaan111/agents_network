@@ -7,7 +7,7 @@ export interface ConversationSummary { id: number; chatbot_type: ChatbotType; ti
 export interface ConversationDetail extends ConversationSummary { messages: { role: "user" | "assistant"; content: string }[] }
 export interface ApiError { status: number; message: string }
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
+const baseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
 
 async function request<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   try {

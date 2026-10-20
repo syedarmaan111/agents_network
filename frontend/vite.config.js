@@ -6,5 +6,8 @@ export default defineConfig({
         // Bind to IPv4 as well as localhost so the app works in Chrome with
         // http://127.0.0.1:5173 and not only VS Code's browser preview.
         host: "0.0.0.0",
+        proxy: {
+            "/api": "http://127.0.0.1:8000",
+        },
     },
 });
